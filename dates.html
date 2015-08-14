@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<meta charset='utf-8'>
+<style>
+</style>
+
+<body>
+</body>
+
+
+<script src='js/d3.js'></script>
+<script src='js/lodash-3.8.0.js'></script>
+<script src='js/d3-jetpack.js'></script>
+<script src='js/d3-starterkit.js'></script>
+<script>
+
+
+// var depts = {name:"jim",amount:34,start:"11/12/2015", stop:"01/23/2017"};
+
+var depts = [
+	{name:'New Jersey State',start: "12/1/94",stop: "12/30/99",status: '1'}, 
+	{name:'New Jersey State',start: "12/30/99",stop: "9/21/09",status: '3'},
+	{name: "Torrance, CA",start: "7/14/93",stop:"9/14/98",status: '1'},
+	{name: "Adelanto",start: "6/16/95",stop:"9/14/98",status: '1'},
+	{name: "Steubenville",start: "7/31/95",stop:"9/3/97",status: '1'},
+	{name: "Steubenville",start: "9/3/97",stop:"3/3/05",status: '3'},
+	{name: "Pittsburgh",start: "4/1/96",stop:"4/16/97",status: '1'},
+	{name: "Pittsburgh",start: "4/16/97",stop:"6/16/05",status: '3'}
+	];
+
+
+var parser = d3.time.format("%m/%d/%Y");
+
+depts.forEach(function(dept) {
+	dept.start = parser.parse(dept.start);
+	dept.stop = parser.parse(dept.stop);
+})
+
+var depts = d3.nest()
+		.key(function(d){ return d.name })
+		.entries(depts);
+
+depts.forEach(function(dept){
+	dept.start = dept.values[0].start
+	dept.stop  = _.last(dept.values).stop
+
+	dept.values.forEach(function(segement){
+		segement.dept = dept
+	})
+})
+
+// console.log(expense);
+console.log(depts);
+
+var color = d3.scale.category10()
+
+players = _.sortBy(players, 'start')
+players.forEach(function(d){ d.dates = [] })
+
+// draw the bumps 
+
+d3.range("12/1/94", "8/11/2015").forEach(function(date){
+	var currentHeight = 0
+	players.forEach(function(d){
+		if (d.start <= date && date <= d.stop){
+			d.dates.push({date: date, height: ++currentHeight})
+			if (d.stop  == date) d.stopHeight  = currentHeight
+			if (d.start == date) d.startHeight = currentHeight
+
+		}
+	})
+})
+
+
+
+</script>
