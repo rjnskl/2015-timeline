@@ -1,75 +1,149 @@
 <!DOCTYPE html>
 <meta charset='utf-8'>
 <style>
+body {
+    margin: 0px;
+    font: 10px sans-serif;
+}
+
+path.player {
+    stroke: steelblue;
+    stroke-width: 1px;
+    fill: none;
+}
+
+path.segement {
+    stroke: red;
+    stroke-width: 4px;
+    fill: none;
+}
+
+.axis line,
+.axis path {
+    fill: none;
+    stroke: #000;
+    shape-rendering: crispEdges;
+}
+
+circle {
+    stroke-width: 2px;
+    stroke: steelblue;
+}
+
+.name {
+    text-shadow: 0 2px 0 #fff, 2px 0 0 #fff, 0 -2px 0 #fff, -2px 0 0 #fff;
+    fill: black;
+}
 </style>
 
 <body>
 </body>
-
-
 <script src='js/d3.js'></script>
 <script src='js/lodash-3.8.0.js'></script>
 <script src='js/d3-jetpack.js'></script>
 <script src='js/d3-starterkit.js'></script>
 <script>
+// var depts = {name:'jim',amount:34,start:'11/12/2015', stop:'01/23/2017'};
 
-
-// var depts = {name:"jim",amount:34,start:"11/12/2015", stop:"01/23/2017"};
-
-var depts = [
-	{name:'New Jersey State',start: "12/1/94",stop: "12/30/99",status: '1'}, 
-	{name:'New Jersey State',start: "12/30/99",stop: "9/21/09",status: '3'},
-	{name: "Torrance, CA",start: "7/14/93",stop:"9/14/98",status: '1'},
-	{name: "Adelanto",start: "6/16/95",stop:"9/14/98",status: '1'},
-	{name: "Steubenville",start: "7/31/95",stop:"9/3/97",status: '1'},
-	{name: "Steubenville",start: "9/3/97",stop:"3/3/05",status: '3'},
-	{name: "Pittsburgh",start: "4/1/96",stop:"4/16/97",status: '1'},
-	{name: "Pittsburgh",start: "4/16/97",stop:"6/16/05",status: '3'}
+var deptSegments = [
+	{name:'New Jersey State',start: '12/01/94',stop: '12/30/99',status: '1'}, 
+	{name:'New Jersey State',start: '12/30/99',stop: '09/21/09',status: '3'},
+	{name: 'Torrance, CA',start: '07/14/93',stop:'09/14/98',status: '1'},
+	{name: 'Adelanto',start: '06/16/95',stop:'09/14/98',status: '1'},
+	{name: 'Steubenville',start: '07/31/95',stop:'09/3/97',status: '1'},
+	{name: 'Steubenville',start: '09/03/97',stop:'03/03/05',status: '3'},
+	{name: 'Pittsburgh',start: '04/01/96',stop:'04/16/97',status: '1'},
+	{name: 'Pittsburgh',start: '04/16/97',stop:'06/16/05',status: '3'}
 	];
 
+var parser = d3.time.format('%m/%d/%y').parse;
+var formatDate = d3.time.format('%b %d, %y');
 
-var parser = d3.time.format("%m/%d/%Y");
+// var parseDate = d3.time.format('%m/%d/%y').parse
+// var formatDate = d3.time.format('%b %d, %Y')
 
-depts.forEach(function(dept) {
-	dept.start = parser.parse(dept.start);
-	dept.stop = parser.parse(dept.stop);
+deptSegments.forEach(function(d) {
+	d.years = []
+	d.start = parser(d.start);
+	d.startTime = +d.start / 1000;
+	d.stop = parser(d.stop); 
+	d.stopTime = +d.stop / 1000;
 })
+
+console.log(deptSegments);
 
 var depts = d3.nest()
-		.key(function(d){ return d.name })
-		.entries(depts);
+    .key(function(d) {
+        return d.name
+    })
+    .entries(deptSegments);
 
-depts.forEach(function(dept){
-	dept.start = dept.values[0].start
-	dept.stop  = _.last(dept.values).stop
+depts.forEach(function(dept) {
+    dept.start = dept.values[0].start
+    dept.stop = _.last(dept.values).stop
 
-	dept.values.forEach(function(segement){
-		segement.dept = dept
-	})
+    dept.values.forEach(function(segement) {
+        segement.dept = dept
+    })
 })
 
-// console.log(expense);
 console.log(depts);
 
 var color = d3.scale.category10()
 
-players = _.sortBy(players, 'start')
-players.forEach(function(d){ d.dates = [] })
-
-// draw the bumps 
-
-d3.range("12/1/94", "8/11/2015").forEach(function(date){
-	var currentHeight = 0
-	players.forEach(function(d){
-		if (d.start <= date && date <= d.stop){
-			d.dates.push({date: date, height: ++currentHeight})
-			if (d.stop  == date) d.stopHeight  = currentHeight
-			if (d.start == date) d.startHeight = currentHeight
-
-		}
-	})
+depts = _.sortBy(depts, 'start')
+depts.forEach(function(d) {
+    d.dates = []
 })
 
 
+// draw the bumps 
 
+d3.range('12/1/94', '8/11/2015').forEach(function(date) {
+    var currentHeight = 0
+    depts.forEach(function(d) {
+        if (d.start <= date && date <= d.stop) {
+            d.dates.push({
+                date: date,
+                height: ++currentHeight
+            })
+            if (d.stop == date) d.stopHeight = currentHeight
+            if (d.start == date) d.startHeight = currentHeight
+        }
+    })
+})
+
+var c = d3.conventions({
+    height: 250
+})
+
+c.x.domain(['12/1/94', '8/11/2015'])
+c.y.domain([0, 10])
+
+c.yAxis.ticks(5)
+
+c.drawAxis()
+
+var line = d3.svg.line()
+    .x(ƒ('date', c.x))
+    .y(ƒ('height', c.y))
+
+c.svg.dataAppend(depts, 'path.dept')
+    .attr('d', ƒ('dates', line))
+
+var segLine = d3.svg.line()
+    .x(ƒ('date', c.x))
+    .y(ƒ('height', c.y))
+
+c.svg.dataAppend(deptSegements, 'path.segement')
+    .attr('d', function(d) {
+        var dates = d.dept.dates.filter(function(date) {
+            return d.start <= date.date && date.date <= d.stop
+        })
+
+        return line(dates)
+    })
+    .style('stroke', function(d) {
+        return color(d.status)
+    })
 </script>

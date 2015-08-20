@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<style>
+body{
+	margin: 0px;
+	font: 10px sans-serif;
+}
+
+path.player{
+	stroke: steelblue;
+	stroke-width: 4px;
+	fill: none;
+}
+
+
+.axis line,
+.axis path {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+circle{
+	stroke-width: 2px;
+	stroke: steelblue;
+}
+
+.name{
+	text-shadow: 0 2px 0 #fff, 2px 0 0 #fff, 0 -2px 0 #fff, -2px 0 0 #fff;
+	fill: black;
+}
+
+
+</style>
+
+<body></body>
+
+<script src='js/d3.js'></script>
+<script src='js/lodash-3.8.0.js'></script>
+<script src='js/d3-jetpack.js'></script>
+<script src='js/d3-starterkit.js'></script>
+<script>
+var players = [
+	{name:'New Jersey State',start: '12/01/94',stop: '12/30/99',status: '1'}, 
+	{name:'New Jersey State',start: '12/30/99',stop: '09/21/09',status: '3'},
+	{name: 'Torrance, CA',start: '07/14/93',stop:'09/14/98',status: '1'},
+	{name: 'Adelanto',start: '06/16/95',stop:'09/14/98',status: '1'},
+	{name: 'Steubenville',start: '07/31/95',stop:'09/3/97',status: '1'},
+	{name: 'Steubenville',start: '09/03/97',stop:'03/03/05',status: '3'},
+	{name: 'Pittsburgh',start: '04/01/96',stop:'04/16/97',status: '1'},
+	{name: 'Pittsburgh',start: '04/16/97',stop:'06/16/05',status: '3'}
+	];
+
+var parser = d3.time.format('%m/%d/%y').parse;
+
+var formatDate = d3.time.format('%b %d, %y');
+
+players = _.sortBy(players, 'start')
+players.forEach(function(d){ 
+	d.years = []
+	d.start = parser(d.start);
+	d.startTime = +d.start / 1000;
+	d.stop = parser(d.stop); 
+	d.stopTime = +d.stop / 1000;
+})
+
+console.log(players);
+
+d3.range(786240000, 1438387200).forEach(function(year){
+	var currentHeight = 0
+	players.forEach(function(d){
+		if (d.start <= year && year <= d.stop){
+			d.years.push({year: year, height: ++currentHeight})
+			if (d.stop  == year) d.stopHeight  = currentHeight
+			if (d.start == year) d.startHeight = currentHeight
+
+		}
+	})
+})
+
+var c = d3.conventions({height: 400})
+
+c.x.domain([786240000, 14383872005])
+c.y.domain([0, 10])
+
+c.yAxis.ticks(2)
+
+c.drawAxis()
+
+var line = d3.svg.line()
+		.x(ƒ('year', c.x))
+		.y(ƒ('height', c.y))
+
+c.svg.dataAppend(players, 'path.player')
+		.attr('d', ƒ('years', line))
+
+c.svg.dataAppend(players, 'circle.start')
+		.attr({cx: ƒ('stop', c.x), cy: ƒ('stopHeight', c.y)})
+		.attr({r: 3, fill: 'white'})
+
+c.svg.dataAppend(players, 'circle.stop')
+		.attr({cx: ƒ('start', c.x), cy: ƒ('startHeight', c.y)})
+		.attr({r: 3, fill: 'steelblue'})
+
+c.svg.dataAppend(players, 'text.name')
+		.attr({x: ƒ('start', c.x), y: ƒ('startHeight', c.y)})
+		.text(ƒ('name'))
+		.attr({'text-anchor': 'end', 'dy': '.33em', 'dx': '-.5em'})
+
+
+d3.select(self.frameElement).style("height", d3.select('svg').attr('height') + "px");
+
+</script>

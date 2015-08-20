@@ -115,6 +115,7 @@ var line = d3.svg.line()
 		.x(ƒ('date', c.x))
 		.y(ƒ('height', c.y))
 
+
 c.svg.dataAppend(players, 'path.player')
 		.attr('d', ƒ('dates', line))
 
